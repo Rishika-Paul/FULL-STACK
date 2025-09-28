@@ -1,0 +1,87 @@
+const express = require('express');
+const app = express();
+const PORT = 3000;
+
+// To parse JSON bodies
+app.use(express.json());
+
+// In-memory seat state
+const seats = {
+  "1": { status: "available", lockedAt: null },
+  "2": { status: "available", lockedAt: null },
+  "3": { status: "available", lockedAt: null },
+  "4": { status: "available", lockedAt: null },
+  "5": { status: "available", lockedAt: null }
+};
+
+// Lock expiry in ms
+const LOCK_DURATION = 60 * 1000; // 1 minute
+
+// Helper to unlock expired seats
+function clearExpiredLocks(seatId) {
+  const seat = seats[seatId];
+  if (
+    seat.status === "locked" &&
+    seat.lockedAt &&
+    Date.now() - seat.lockedAt > LOCK_DURATION
+  ) {
+    seat.status = "available";
+    seat.lockedAt = null;
+  }
+}
+
+// View all seats
+app.get('/seats', (req, res) => {
+  Object.keys(seats).forEach(clearExpiredLocks);
+  res.status(200).json(seats);
+});
+
+// Add or update a seat dynamically
+app.post('/seats', (req, res) => {
+  const { seatId, status } = req.body;
+  if (!seatId || !status) {
+    return res.status(400).json({ message: 'Please provide seatId and status' });
+  }
+  if (!["available", "locked", "booked"].includes(status)) {
+    return res.status(400).json({ message: 'Invalid status value' });
+  }
+  seats[seatId] = { status, lockedAt: null };
+  res.status(200).json({ message: `Seat ${seatId} updated/added with status ${status}` });
+});
+
+// Lock a seat
+app.post('/lock/:id', (req, res) => {
+  const seatId = req.params.id;
+  const seat = seats[seatId];
+  if (!seat) {
+    return res.status(404).json({ message: "Seat not found." });
+  }
+  clearExpiredLocks(seatId);
+  if (seat.status !== "available") {
+    return res.status(400).json({ message: "Seat not available for locking." });
+  }
+  seat.status = "locked";
+  seat.lockedAt = Date.now();
+  setTimeout(() => clearExpiredLocks(seatId), LOCK_DURATION);
+  res.status(200).json({ message: `Seat ${seatId} locked successfully. Confirm within 1 minute.` });
+});
+
+// Confirm booked seat
+app.post('/confirm/:id', (req, res) => {
+  const seatId = req.params.id;
+  const seat = seats[seatId];
+  if (!seat) {
+    return res.status(404).json({ message: "Seat not found." });
+  }
+  clearExpiredLocks(seatId);
+  if (seat.status === "locked") {
+    seat.status = "booked";
+    seat.lockedAt = null;
+    return res.status(200).json({ message: `Seat ${seatId} booked successfully!` });
+  }
+  res.status(400).json({ message: "Seat is not locked and cannot be booked" });
+});
+
+app.listen(PORT, () => {
+  console.log('https://ypbhoi-3000.bytexl.dev/seats');
+});
