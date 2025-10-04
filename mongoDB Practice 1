@@ -1,0 +1,95 @@
+// 1. Import required modules
+const mongoose = require('mongoose');
+
+// 2. Connect to MongoDB (replace <username>, <password>, <cluster-url>, <dbname>)
+mongoose.connect('mongodb+srv://<username>:<password>@<cluster-url>/<dbname>?retryWrites=true&w=majority', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('Connected to MongoDB successfully!'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+// 3. Define Product schema and model
+const productSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    price: { type: Number, required: true, min: 0 },
+    category: { type: String, required: true }
+});
+
+const Product = mongoose.model('Product', productSchema);
+
+// 4. CRUD Operations
+
+// a) Create a new product
+async function createProduct(name, price, category) {
+    try {
+        const product = new Product({ name, price, category });
+        const result = await product.save();
+        console.log('Product Created:', result);
+    } catch (err) {
+        console.error('Error creating product:', err.message);
+    }
+}
+
+// b) Read all products
+async function getAllProducts() {
+    try {
+        const products = await Product.find();
+        console.log('All Products:', products);
+    } catch (err) {
+        console.error('Error fetching products:', err.message);
+    }
+}
+
+// c) Update a product by ID
+async function updateProduct(id, updatedData) {
+    try {
+        const result = await Product.findByIdAndUpdate(id, updatedData, { new: true, runValidators: true });
+        if (result) {
+            console.log('Product Updated:', result);
+        } else {
+            console.log('Product not found!');
+        }
+    } catch (err) {
+        console.error('Error updating product:', err.message);
+    }
+}
+
+// d) Delete a product by ID
+async function deleteProduct(id) {
+    try {
+        const result = await Product.findByIdAndDelete(id);
+        if (result) {
+            console.log('Product Deleted:', result);
+        } else {
+            console.log('Product not found!');
+        }
+    } catch (err) {
+        console.error('Error deleting product:', err.message);
+    }
+}
+
+// 5. Example Usage
+async function runExample() {
+    // Create products
+    await createProduct('Laptop', 75000, 'Electronics');
+    await createProduct('Desk Chair', 3500, 'Furniture');
+
+    // Read all products
+    await getAllProducts();
+
+    // Update a product (replace 'PRODUCT_ID' with actual _id from your DB)
+    // await updateProduct('PRODUCT_ID', { price: 80000 });
+
+    // Delete a product (replace 'PRODUCT_ID' with actual _id from your DB)
+    // await deleteProduct('PRODUCT_ID');
+
+    // Fetch again to see updates
+    // await getAllProducts();
+
+    // Close connection
+    mongoose.connection.close();
+}
+
+// Run example
+runExample();
