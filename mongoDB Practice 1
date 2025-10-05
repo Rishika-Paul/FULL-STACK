@@ -1,95 +1,85 @@
-// 1. Import required modules
+// src/app.js
+const express = require('express');
 const mongoose = require('mongoose');
 
-// 2. Connect to MongoDB (replace <username>, <password>, <cluster-url>, <dbname>)
-mongoose.connect('mongodb+srv://<username>:<password>@<cluster-url>/<dbname>?retryWrites=true&w=majority', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB successfully!'))
-.catch(err => console.error('MongoDB connection error:', err));
+const app = express();
+app.use(express.json());
 
-// 3. Define Product schema and model
+// MongoDB Atlas connection (Mongoose v8 automatically handles parser options)
+const mongoURI = 'mongodb+srv://rishikapaul335_db_user:Tizyg0z1alfjANt6@cluster0.kxquzlx.mongodb.net/productDB?retryWrites=true&w=majority';
+
+mongoose.connect(mongoURI)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('Connection error:', err));
+
+// Define Product schema
 const productSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    price: { type: Number, required: true, min: 0 },
-    category: { type: String, required: true }
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  category: { type: String, required: true }
 });
 
 const Product = mongoose.model('Product', productSchema);
 
-// 4. CRUD Operations
+// Root route
+app.get('/', (req, res) => {
+  res.send('Welcome to Product API!');
+});
 
-// a) Create a new product
-async function createProduct(name, price, category) {
-    try {
-        const product = new Product({ name, price, category });
-        const result = await product.save();
-        console.log('Product Created:', result);
-    } catch (err) {
-        console.error('Error creating product:', err.message);
-    }
-}
+// CRUD Routes
 
-// b) Read all products
-async function getAllProducts() {
-    try {
-        const products = await Product.find();
-        console.log('All Products:', products);
-    } catch (err) {
-        console.error('Error fetching products:', err.message);
-    }
-}
+// Create Product
+app.post('/addProduct', async (req, res) => {
+  try {
+    const product = new Product(req.body);
+    const savedProduct = await product.save();
+    res.status(201).json(savedProduct);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
-// c) Update a product by ID
-async function updateProduct(id, updatedData) {
-    try {
-        const result = await Product.findByIdAndUpdate(id, updatedData, { new: true, runValidators: true });
-        if (result) {
-            console.log('Product Updated:', result);
-        } else {
-            console.log('Product not found!');
-        }
-    } catch (err) {
-        console.error('Error updating product:', err.message);
-    }
-}
+// Get all Products
+app.get('/getProducts', async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-// d) Delete a product by ID
-async function deleteProduct(id) {
-    try {
-        const result = await Product.findByIdAndDelete(id);
-        if (result) {
-            console.log('Product Deleted:', result);
-        } else {
-            console.log('Product not found!');
-        }
-    } catch (err) {
-        console.error('Error deleting product:', err.message);
-    }
-}
+// Update Product by ID
+app.put('/updateProduct/:id', async (req, res) => {
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedProduct) return res.status(404).json({ message: 'Product not found' });
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
-// 5. Example Usage
-async function runExample() {
-    // Create products
-    await createProduct('Laptop', 75000, 'Electronics');
-    await createProduct('Desk Chair', 3500, 'Furniture');
+// Delete Product by ID
+app.delete('/deleteProduct/:id', async (req, res) => {
+  try {
+    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+    if (!deletedProduct) return res.status(404).json({ message: 'Product not found' });
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-    // Read all products
-    await getAllProducts();
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).send('Page not found');
+});
 
-    // Update a product (replace 'PRODUCT_ID' with actual _id from your DB)
-    // await updateProduct('PRODUCT_ID', { price: 80000 });
-
-    // Delete a product (replace 'PRODUCT_ID' with actual _id from your DB)
-    // await deleteProduct('PRODUCT_ID');
-
-    // Fetch again to see updates
-    // await getAllProducts();
-
-    // Close connection
-    mongoose.connection.close();
-}
-
-// Run example
-runExample();
+// Use the environment port provided by Nimbus/Bytexl
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
