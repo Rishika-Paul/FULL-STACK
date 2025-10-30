@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JWT Banking API Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .container {
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      width: 320px;
+      margin-top: 20px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #response {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 15px;
+      min-height: 80px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #333;
+      white-space: pre-wrap;
+    }
+
+    .actions button {
+      width: 48%;
+      margin-right: 4%;
+    }
+
+    .actions button:last-child {
+      margin-right: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏦 Secure Banking API</h1>
+
+  <div class="container">
+    <h3>Login</h3>
+    <input id="username" placeholder="Username" value="user1" />
+    <input id="password" type="password" placeholder="Password" value="password123" />
+    <button onclick="login()">Login</button>
+
+    <hr>
+
+    <h3>Protected Actions</h3>
+    <div class="actions">
+      <button onclick="getBalance()">Check Balance</button>
+      <button onclick="deposit()">Deposit ₹500</button>
+      <button onclick="withdraw()">Withdraw ₹200</button>
+    </div>
+
+    <div id="response">Response will appear here...</div>
+  </div>
+
+  <script>
+    let token = "";
+
+    const API_URL = "https://xdmtcditytiijtip-3000.bytexl.net";
+
+    function showResponse(data) {
+      document.getElementById("response").innerText =
+        typeof data === "string" ? data : JSON.stringify(data, null, 2);
+    }
+
+    async function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch(`${API_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          token = data.token;
+          showResponse("✅ Logged in successfully!\n\nToken:\n" + token);
+        } else {
+          showResponse(data);
+        }
+      } catch (err) {
+        showResponse("❌ Error: " + err.message);
+      }
+    }
+
+    async function getBalance() {
+      if (!token) return showResponse("⚠️ Please login first!");
+      try {
+        const res = await fetch(`${API_URL}/balance`, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const data = await res.json();
+        showResponse(data);
+      } catch (err) {
+        showResponse("❌ " + err.message);
+      }
+    }
+
+    async function deposit() {
+      if (!token) return showResponse("⚠️ Please login first!");
+      try {
+        const res = await fetch(`${API_URL}/deposit`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token
+          },
+          body: JSON.stringify({ amount: 500 })
+        });
+        const data = await res.json();
+        showResponse(data);
+      } catch (err) {
+        showResponse("❌ " + err.message);
+      }
+    }
+
+    async function withdraw() {
+      if (!token) return showResponse("⚠️ Please login first!");
+      try {
+        const res = await fetch(`${API_URL}/withdraw`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token
+          },
+          body: JSON.stringify({ amount: 200 })
+        });
+        const data = await res.json();
+        showResponse(data);
+      } catch (err) {
+        showResponse("❌ " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
