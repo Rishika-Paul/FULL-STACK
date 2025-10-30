@@ -1,12 +1,14 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
 const PORT = 3000;
 const SECRET_KEY = 'mybanksecret';
 
 app.use(bodyParser.json());
+app.use(cors());
 
 let account = { username: 'user1', password: 'password123', balance: 1000 };
 
