@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Middleware Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #333;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #0066cc;
+    }
+    button {
+      background: #0066cc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px 5px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #004c99;
+    }
+    pre {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 20px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    #tokenInput {
+      display: none;
+      margin-top: 10px;
+    }
+    input {
+      padding: 8px;
+      width: 70%;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Express Middleware Demo</h1>
+
+  <button onclick="getPublic()">Get Public Route</button>
+  <button onclick="startProtected()">Get Protected Route</button>
+
+  <div id="tokenInput">
+    <input type="text" id="tokenField" placeholder="Enter your secret token" />
+    <button onclick="submitToken()">Submit Token</button>
+  </div>
+
+  <pre id="output">Click a button to test an API route.</pre>
+
+  <script>
+    async function getPublic() {
+      const res = await fetch('/public');
+      const data = await res.text();
+      document.getElementById('output').textContent = data;
+    }
+
+    function startProtected() {
+      document.getElementById('output').textContent =
+        "Cannot access protected route without authentication.\nPlease enter the secret code below.";
+      document.getElementById('tokenInput').style.display = "block";
+    }
+
+    async function submitToken() {
+      const token = document.getElementById('tokenField').value.trim();
+      if (!token) {
+        document.getElementById('output').textContent = "No token entered. Access denied.";
+        return;
+      }
+
+      const res = await fetch('/protected', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.status === 200) {
+        const data = await res.json();
+        document.getElementById('output').textContent =
+          JSON.stringify(data, null, 2);
+      } else if (res.status === 403) {
+        document.getElementById('output').textContent = "Invalid token! Access denied.";
+      } else {
+        document.getElementById('output').textContent = "Unauthorized access. Token missing or incorrect.";
+      }
+
+      // Hide token input again
+      document.getElementById('tokenInput').style.display = "none";
+      document.getElementById('tokenField').value = "";
+    }
+  </script>
+</body>
+</html>
