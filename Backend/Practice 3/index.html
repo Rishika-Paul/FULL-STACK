@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💸 Account Transfer System</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #007bff, #00c6ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+    .container {
+      background: #fff;
+      padding: 30px 25px;
+      border-radius: 15px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h2 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.3s;
+    }
+    input:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 5px rgba(0,123,255,0.3);
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #007bff;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+    button:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+    }
+    #result {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+      display: none;
+    }
+    .success {
+      background-color: #e6ffed;
+      border: 1px solid #28a745;
+      color: #155724;
+    }
+    .error {
+      background-color: #ffe6e6;
+      border: 1px solid #dc3545;
+      color: #721c24;
+    }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #666;
+    }
+    @media (max-width: 480px) {
+      .container {
+        margin: 15px;
+        padding: 25px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>💳 Money Transfer</h2>
+    <form id="transferForm">
+      <input type="text" id="from" placeholder="Sender username (e.g. alice)" required />
+      <input type="text" id="to" placeholder="Receiver username (e.g. bob)" required />
+      <input type="number" id="amount" placeholder="Amount" required />
+      <button type="submit">Transfer Now</button>
+    </form>
+    <div id="result"></div>
+
+    <footer>© 2025 Secure Transfer System</footer>
+  </div>
+
+  <script>
+    const API_BASE = 'https://ouhtcdivynpkge-3000.bytexl.net';
+
+    const form = document.getElementById('transferForm');
+    const resultDiv = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resultDiv.style.display = 'none';
+
+      const from = document.getElementById('from').value.trim();
+      const to = document.getElementById('to').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+
+      if (!from || !to || !amount || amount <= 0) {
+        showMessage('Please enter valid transfer details.', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/transfer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from, to, amount })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessage(`✅ ${data.message}
+          \nSender Balance: ${data.senderBalance}
+          \nReceiver Balance: ${data.receiverBalance}`, 'success');
+          form.reset();
+        } else {
+          showMessage(`❌ ${data.error}`, 'error');
+        }
+      } catch (err) {
+        showMessage('⚠️ Server not reachable. Please check connection.', 'error');
+      }
+    });
+    function showMessage(msg, type) {
+      resultDiv.textContent = msg;
+      resultDiv.className = type;
+      resultDiv.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
