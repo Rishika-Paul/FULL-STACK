@@ -1,0 +1,25 @@
+-- app.jsk
+
+function App() {
+  return (
+    <div style={{ textAlign: "center", marginTop: "100px" }}>
+      <h1>🚀 Dockerized React App (Vite + React)</h1>
+      <p>This React app is running inside a Docker container using Nginx!</p>
+    </div>
+  );
+}
+
+export default App;
+
+-- main.jsk
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.jsx";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
