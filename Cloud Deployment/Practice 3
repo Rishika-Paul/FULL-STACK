@@ -1,0 +1,126 @@
+-- app.jsk
+
+import { useEffect, useState } from "react";
+import { apiGet } from "./api";
+
+export default function App() {
+  const [message, setMessage] = useState("Loading...");
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch a message from backend
+    apiGet("/").then((data) => {
+      if (data && data.message) setMessage(data.message);
+      else setMessage("No response from backend");
+    }).catch((err) => {
+      console.error(err);
+      setMessage("Error contacting backend");
+    });
+  }, []);
+
+  const increment = async () => {
+    try {
+      const res = await apiGet("/increment");
+      if (res && typeof res.count === "number") setCount(res.count);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>🌐 Full Stack App (Frontend)</h1>
+        <p style={styles.subtitle}>
+          This React app is ready to be deployed separately from the backend.
+        </p>
+
+        <div style={styles.row}>
+          <strong>Backend message:</strong>
+          <span style={styles.badge}>{message}</span>
+        </div>
+
+        <div style={{ marginTop: 18 }}>
+          <button style={styles.button} onClick={increment}>Hit backend /increment</button>
+          <div style={{ marginTop: 12 }}>
+            <strong>Count from backend:</strong> <span style={styles.count}>{count}</span>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 18, fontSize: 13, color: "#666" }}>
+          API base: <code>{import.meta.env.VITE_API_URL || "not set"}</code>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  page: { display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#f6f8fb" },
+  card: { width: 720, padding: 28, borderRadius: 12, background: "#fff", boxShadow: "0 6px 20px rgba(20,20,40,0.08)" },
+  title: { margin: 0, fontSize: 26 },
+  subtitle: { marginTop: 8, color: "#444" },
+  row: { display: "flex", gap: 12, alignItems: "center", marginTop: 16 },
+  badge: { marginLeft: 8, padding: "4px 8px", background: "#eef2ff", borderRadius: 8 },
+  button: { padding: "10px 16px", borderRadius: 8, border: "none", cursor: "pointer", background: "#2563eb", color: "white" },
+  count: { marginLeft: 8, color: "#2563eb" },
+};
+
+
+-- api.js
+
+// simple API helper — uses Vite env variable VITE_API_URL
+const BASE = import.meta.env.VITE_API_URL || "";
+
+async function apiGet(path) {
+  const url = ${BASE}${path};
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(HTTP ${res.status}: ${text});
+  }
+  return res.json();
+}
+
+export { apiGet };
+
+
+-- main.jsk
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode><App /></React.StrictMode>
+);
+
+-- index.css
+
+/* minimal reset + fonts */
+html,body,#root { height: 100%; margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+
+
+-- package.json
+
+{
+  "name": "react-aws-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5000"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
